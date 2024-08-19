@@ -1,3 +1,8 @@
+import 'package:admin/models/api_response.dart';
+import 'package:admin/models/my_notification.dart';
+import 'package:admin/utility/snack_bar_helper.dart';
+import 'package:get/get.dart';
+
 import '../../../models/notification_result.dart';
 import 'package:flutter/cupertino.dart';
 import '../../../core/data/data_provider.dart';
@@ -19,10 +24,50 @@ class NotificationProvider extends ChangeNotifier {
   NotificationProvider(this._dataProvider);
 
 
-  //TODO: should complete sendNotification
+  sendNotification() async {
+    try {
+      Map<String, dynamic> notifications = {
+        "title": titleCtrl.text,
+        "description": descriptionCtrl.text,
+        "imageUrl": imageUrlCtrl.text
+      };
+      final response = await service.addItem(endpointUrl: 'notification/send-notification', itemData: notifications);
+      if (response.isOk) {
+        ApiResponse apiResponse = ApiResponse.fromJson(response.body, null);
+        if (apiResponse == true) {
+          clearFields();
+          SnackBarHelper.showSuccessSnackBar('${apiResponse.message}');
+          _dataProvider.getAllNotifications();
+        } else {
+          SnackBarHelper.showErrorSnackBar('Falha ao enviar notificacao ${apiResponse.message}');
+        }
+      }else{
+          SnackBarHelper.showErrorSnackBar('Error ${response.body}');
+      }
+    } catch (e) {
+      SnackBarHelper.showErrorSnackBar('Erro $e');
+      rethrow;
+    }
+  }
 
 
-  //TODO: should complete deleteNotification
+  deleteNotification(MyNotification notification) async {
+    try {
+      Response response = await service.deleteItem(endpointUrl: 'notification/delete-notification', itemId: notification.sId ?? '');
+      if (response.isOk) {
+        ApiResponse apiResponse = ApiResponse.fromJson(response.body, null);
+        if (apiResponse.success == true) {
+          SnackBarHelper.showSuccessSnackBar('Notificacao deletada com sucesso!');
+          _dataProvider.getAllNotifications();
+        }
+      } else {
+        SnackBarHelper.showErrorSnackBar('Erro ${response.body}');
+      }
+    } catch (e) {
+      SnackBarHelper.showErrorSnackBar(e.toString());
+      rethrow;
+    }
+  }
 
   //TODO: should complete getNotificationInfo
 

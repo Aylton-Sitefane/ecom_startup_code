@@ -69,6 +69,7 @@ class DataProvider extends ChangeNotifier {
     getAllPosters();
     getAllCoupons();
     getAllOrders();
+    getAllNotifications();
   }
 
 //categories
@@ -372,9 +373,7 @@ class DataProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  //TODO: should complete getAllNotifications
-
-  //TODO: should complete filterNotifications
+  
 
   Future<List<Order>> getAllOrders({bool showSnack= false}) async {
     try {
@@ -458,6 +457,37 @@ class DataProvider extends ChangeNotifier {
       }
     }
     return totalProduct;
+  }
+
+  Future<List<MyNotification>> getAllNotifications({bool showSnack = false}) async {
+    try {
+      Response response = await service.getItems(endpointUrl: 'notification/all-notification');
+      if (response.isOk) {
+        ApiResponse<List<MyNotification>> apiResponse = ApiResponse<List<MyNotification>>.fromJson(response.body, (json) => (json as List).map((item) => MyNotification.fromJson(item)).toList(),);
+        _allNotifications = apiResponse.data ?? [];
+        _filteredNotifications = List.from(_allNotifications);
+        notifyListeners();
+        if(showSnack) SnackBarHelper.showErrorSnackBar(apiResponse.message);
+      }
+    } catch (e) {
+      if (showSnack) {
+        SnackBarHelper.showErrorSnackBar(e.toString());
+      }
+    }
+
+    return _filteredNotifications;
+  }
+
+  void filteredNotifications(String val) {
+    if (val.isEmpty) {
+      _filteredNotifications = List.from(_allNotifications);
+    } else {
+      final lowerWord = val.toLowerCase();
+      _filteredNotifications = _allNotifications.where((notification) {
+        return (notification.title ?? '').toLowerCase().contains(lowerWord);
+      }).toList();
+    }
+    notifyListeners();
   }
   
 }
